@@ -9,7 +9,7 @@
     ]
   },
   "hosting": {
-    "public": "public",
+    "public": "bike-viewer/dist",
     "ignore": [
       "firebase.json",
       "**/.*",
