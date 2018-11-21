@@ -1,7 +1,6 @@
 <template>
   <div id="app">
-    <h1>{{count}}</h1>
-    <BikeCount :nr="count" :avg="avg"></BikeCount>
+    <!--<h1>{{count}}</h1><BikeCount :nr="count" :avg="avg"></BikeCount>-->
   </div>
 </template>
 
@@ -19,7 +18,7 @@ const firebaseSettings = {
 db.settings(firebaseSettings)
 
 // Components
-import BikeCount from './components/BikeCount.vue'
+// import BikeCount from './components/BikeCount.vue'
 
 export default {
     name: 'app',
@@ -34,10 +33,11 @@ export default {
     },
     beforeMount () {
         // DB structure change => make stations primary documents, store update events under stations
-        let stations = db.collection('stations').orderBy('timestamp', 'desc').get().then((snapshot) => {
+        // eslint-disable-next-line
+        /* This gets all everything. Too much. No.
+       let stations = db.collection('stations').orderBy('timestamp', 'desc').get().then((snapshot) => {
             let total = 0
             let avg = 0
-            let docs = 0
             snapshot.forEach((document) => {
                 let count = 0
                 let doc = document.data()
@@ -55,7 +55,7 @@ export default {
                 count = count + parseInt(station.bikesAvailable)
             }
             this.count = count
-        })
+        })*/
     }
 
 }

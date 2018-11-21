@@ -9,8 +9,8 @@
 export default {
     name: 'BikeCount',
     props: {
-        nr: Number,
-        avg: Number
+        nr: '',
+        avg: ''
     },
     mounted () {
         let avg = Math.floor(this.avg)
