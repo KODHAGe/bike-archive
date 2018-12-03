@@ -1,6 +1,9 @@
 <template>
   <div id="app">
-    <!--<h1>{{count}}</h1><BikeCount :nr="count" :avg="avg"></BikeCount>-->
+      <div id='map'></div>
+      <!--<h1>{{count}}</h1><BikeCount :nr="count" :avg="avg"></BikeCount>-->
+      <div class="button button-previous" v-on:click="goBack">Go back pls</div>
+      <div class="button button-next" v-on:click="goForward">NEE-EXT</div>
   </div>
 </template>
 
@@ -17,8 +20,10 @@ const firebaseSettings = {
 }
 db.settings(firebaseSettings)
 
+import mapboxgl from 'mapbox-gl'
+
 // Components
-// import BikeCount from './components/BikeCount.vue'
+import BikeCount from './components/BikeCount.vue'
 
 export default {
     name: 'app',
@@ -28,46 +33,88 @@ export default {
     data: () => {
         return {
             count: '',
-            avg: ''
+            avg: '',
+            map: {}
         }
     },
-    beforeMount () {
-        // DB structure change => make stations primary documents, store update events under stations
-        // eslint-disable-next-line
-        /* This gets all everything. Too much. No.
-       let stations = db.collection('stations').orderBy('timestamp', 'desc').get().then((snapshot) => {
-            let total = 0
-            let avg = 0
-            snapshot.forEach((document) => {
-                let count = 0
-                let doc = document.data()
-                for (let station of doc.stations.bikeRentalStations) {
-                    count = count + parseInt(station.bikesAvailable)
+    mounted () {
+        mapboxgl.accessToken = process.env.VUE_APP_MAPBOX_KEY;
+        this.map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v9',
+            zoom: 13,
+            center: [24.9384, 60.1699],
+            pitch: 40,
+            bearing: 20
+        });
+        this.map.on('load', () => {
+            let url = 'http://localhost:5001/bike-archive/us-central1/asGeoJSON';
+            this.map.addSource('stations', { type: 'geojson', data: url });
+            this.map.addLayer({
+                "id": "bikestations",
+                "type": "fill-extrusion",
+                "source": "stations",
+                "paint": {
+                    'fill-extrusion-color': '#ff00ff',
+                    'fill-extrusion-height': ['get', 'bikesAvailable'],
+                    'fill-extrusion-opacity': 1
                 }
-                this.count = count
-                total += count
+            });
+            setTimeout(() => {
+                var features = this.map.queryRenderedFeatures({ layers: ['bikestations'] });
+                console.log(features);
+            }, 5000)
+        });
+    },
+    methods: {
+        goBack: function (event) {
+            console.log('backowardo!')
+        },
+        goForward: function(event) {
+            let url = 'http://localhost:5001/bike-archive/us-central1/asGeoJSON?val=' + 100;
+            let json = fetch(url).then(async (response) => {
+                let res = await response.json()
+                console.log(res)
+                console.log(this.map.getSource('stations'))
+                this.map.getSource('stations').setData(res)
             })
-            avg = total/snapshot.docs.length
-            this.avg = avg
-            let count = 0
-            let doc = snapshot.docs[0].data()
-            for (let station of doc.stations.bikeRentalStations) {
-                count = count + parseInt(station.bikesAvailable)
-            }
-            this.count = count
-        })*/
+        }
     }
 
 }
 </script>
 
 <style>
+html {
+    height: 100%;
+    width: 100%;
+}
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+}
 #app {
-  font-family: Helvetica, Arial, sans-serif;
-  text-align: center;
-  color: black;
-  margin-top: 6rem;
-  font-size: 12rem;
-  text-shadow: 4px 4px #ffff00;
+    height: 100%;
+    width: 100%;
+}
+
+#map {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.button {
+    position: fixed;
+    bottom: 2rem;
+}
+
+.button-next {
+    right: 2rem;
+}
+
+.button-previous {
+    left: 2rem;
 }
 </style>

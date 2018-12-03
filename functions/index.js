@@ -8,13 +8,16 @@ const fs = require('fs')
 
 // Other
 const graphql = require('graphql.js')
+const Terraformer = require('terraformer')
 
 exports.asGeoJSON = functions.https.onRequest((request, response) => {
     let toGeoJSON = []
-    db.collection('stations').orderBy('timestamp', 'asc').limit(1).get().then((snapshot) => {
+    let val = !request.query.val ? 0 : request.query.val
+    console.log(val)
+    db.collection('stations').orderBy('timestamp', 'asc').startAt(val).limit(1).get().then((snapshot) => {
         snapshot.forEach((document) => {
-            console.log(document)
             let doc = document.data()
+            console.log(doc.timestamp)
             let stations = doc.stations.bikeRentalStations
             stations.forEach((station) => {
                 let stationObject = {
@@ -28,16 +31,30 @@ exports.asGeoJSON = functions.https.onRequest((request, response) => {
                 toGeoJSON.push(stationObject)
             })
             let geoJSON = geojson.parse(toGeoJSON, {Point: ['lat', 'lon']})
-            console.log(geoJSON)
-            console.log(doc.timestamp)
-            fs.writeFile('processed.geojson', JSON.stringify(geoJSON), 'utf8', (error) => {
+            let polygonGeoJSON = {
+                'type': geoJSON.type,
+                'features': []
+            }
+            for(let feature of geoJSON.features) {
+                let element = new Terraformer.Primitive(feature)
+                let circle = new Terraformer.Circle(element.geometry.coordinates, 32, 32)
+                element.point = element.geometry
+                element.geometry = circle.geometry
+                element.properties = Object.assign(circle.properties, element.properties)
+                polygonGeoJSON.features.push(element)
+            }
+
+            /* Write to file
+            fs.writeFile('processed.geojson', JSON.stringify(polygonGeoJSON), 'utf8', (error) => {
                 if(error) {
                     return console.log(error)
                 }
                 console.log('Saved')
             })
+            */
+            response.set('Access-Control-Allow-Origin', '*')
+            response.send(polygonGeoJSON)
         })
-        response.send('Success!')
         return snapshot
     }).catch((error) => {
         response.send("Error " + error)

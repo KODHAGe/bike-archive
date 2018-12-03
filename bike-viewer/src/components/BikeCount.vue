@@ -1,6 +1,6 @@
 <template>
   <div class="howmanybikes">
-     <p>{{nr}}/2550 of Helsinki city bikes are currently available.</p>
+     <p>{{nr}}/2550 of Helsinki city bikes are currently available.xd</p>
      <p>{{str}}</p>
   </div>
 </template>
